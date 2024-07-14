@@ -1,5 +1,5 @@
 import { db } from '$lib/database'
-import { fail, redirect, type Action, type Actions } from '@sveltejs/kit';
+import { fail, type Action, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -33,7 +33,24 @@ const delete_todos: Action = async ({ request, locals }) => {
     const id = formData.get('id');
     if (!id) return fail(400, { invalid: true })
 
+    const record = await db.todos.findFirst({ where: { id: Number(id), userId: locals.user.id } })
+    if (!record) return fail(400, { invalid: true })
+
     await db.todos.delete({ where: { id: Number(id), userId: locals.user.id } })
+    return { success: true }
+
+}
+
+const toggle_complete: Action = async ({ request, locals }) => {
+    const formData = await request.formData()
+
+    const id = formData.get('id');
+    if (!id) return fail(400, { invalid: true })
+
+    const record = await db.todos.findFirst({ where: { id: Number(id), userId: locals.user.id } })
+    if (!record) return fail(400, { invalid: true })
+
+    await db.todos.update({ where: { id: Number(id), userId: locals.user.id }, data: { completed: !record.completed } })
     return { success: true }
 
 }
@@ -43,4 +60,4 @@ const clear_all: Action = async ({ request, locals }) => {
     return { success: true }
 }
 
-export const actions: Actions = { add_todos, delete_todos, clear_all }
+export const actions: Actions = { add_todos, delete_todos, clear_all, toggle_complete }

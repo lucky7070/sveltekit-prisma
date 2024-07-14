@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '@sveltejs/kit';
+
 	export let data;
 	export let form;
 
@@ -11,6 +11,10 @@
 <ul>
 	{#each data.todos as todo}
 		<li class={todo.completed ? `done` : `pending`}>
+			<form action="?/toggle_complete" method="POST" use:enhance>
+				<input type="hidden" name="id" value={todo.id} />
+				<button type="submit" class="mb-0"> Done </button>
+			</form>
 			<span>{todo.text}</span>
 			<form action="?/delete_todos" method="POST" use:enhance>
 				<input type="hidden" name="id" value={todo.id} />
@@ -33,18 +37,17 @@
 		}}
 	>
 		<input type="text" name="todo" />
-
 		{#if form?.missing}<p class="error">This field is required</p>{/if}
-
-		<button type="submit" aria-busy={loading} class:danger={loading}>+ Add Todo</button>
+		<button type="submit" aria-busy={loading} class:danger={loading}> + Add Todo </button>
 	</form>
 	<form
 		action="?/clear_all"
 		method="post"
 		use:enhance={() => {
 			loading_delete = true;
-			return () => {
+			return async ({ update }) => {
 				loading_delete = false;
+				await update();
 			};
 		}}
 	>
@@ -89,5 +92,9 @@
 	.error {
 		color: tomato;
 		text-align: center;
+	}
+
+	.mb-0 {
+		margin-bottom: 0;
 	}
 </style>
